@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      user: root
+      password: 1234
+      authentication-database: admin
+      database: messenger
+      port: 27017
+      host: localhost
