@@ -7,3 +7,31 @@ spring:
       database: messenger
       port: 27017
       host: localhost
+  main:
+    web-application-type: reactive
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: 610774454872-d9pqnumf10ddvjebf2n7jcr4q2fo1q5n.apps.googleusercontent.com
+#            client-secret: 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
+#            client-name: messenger
+#            scope: profile
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+server:
+  port: 8080
+  servlet:
+    context-path: /messenger
+    session:
+      cookie:
+        path: /messenger
+#  ssl:
+#    key-store-password: messenger123
+#    key-store: classpath:securitykeystore.p12
+#    key-store-type: PKCS12
+#    key-alias: messenger-alias

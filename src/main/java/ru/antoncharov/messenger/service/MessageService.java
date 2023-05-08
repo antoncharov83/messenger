@@ -3,6 +3,7 @@ package ru.antoncharov.messenger.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.antoncharov.messenger.model.Message;
 import ru.antoncharov.messenger.repository.MessageRepository;
 import ru.antoncharov.messenger.repository.UserRepository;
@@ -20,23 +21,27 @@ public class MessageService {
 
 
     public Flux<Message> findAllByRecipientId(String id) {
-        var recipient = userRepository.findById(id);
-
-        return messageRepository.findAllByRecipientsContaining(recipient);
+        return userRepository.findById(id).flatMapMany(user -> messageRepository.findAllByRecipientsContaining(user));
     }
 
-    public void saveMessage(String fromId, List<String> toIds, String content) {
-        var from = userRepository.findById(fromId);
-        from.doOnSuccess(user -> {
-            var recipients = userRepository.findAllById(toIds);
-            recipients.doOnEach(recipient -> {
-                var message = messageRepository.findFirstByRecipientsContainingAndAndSender(recipient.get(), user);
-                message.doOnSuccess(foundMsg -> {
-                    foundMsg.getRecipients().add(recipient.get());
-                    messageRepository.save(foundMsg);
-                }).switchIfEmpty(messageRepository.save(new Message(UUID.randomUUID().toString(), user, List.of(recipient.get()), content)));
+    public Mono<Message> deleteMessageId(String id) {
+        return messageRepository.findById(id).flatMap(message -> messageRepository.delete(message).then(Mono.just(message)))
+                .switchIfEmpty(Mono.empty());
+    }
+
+    public void saveMessage(Mono<String> sender, List<String> recipientsUsername, String content) {
+        sender.subscribe(username -> {
+            var from = userRepository.findUserByUsername(username);
+            from.subscribe(user -> {
+                var recipients = userRepository.findAllByUsernameIn(recipientsUsername);
+                recipients.subscribe(recipient -> {
+                    var message = messageRepository.findFirstByRecipientsContainingAndAndSender(recipient, user);
+                    message.doOnSuccess(foundMsg -> {
+                        foundMsg.getRecipients().add(recipient);
+                        messageRepository.save(foundMsg);
+                    }).switchIfEmpty(messageRepository.save(new Message(UUID.randomUUID().toString(), user, List.of(recipient), content)));
+                });
             });
         });
-
     }
 }

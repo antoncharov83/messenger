@@ -10,7 +10,7 @@ import ru.antoncharov.messenger.model.User;
 @Repository
 public interface MessageRepository extends ReactiveCrudRepository<Message, String> {
 
-    Flux<Message> findAllByRecipientsContaining(Mono<User> recipient);
+    Flux<Message> findAllByRecipientsContaining(User recipient);
 
     Mono<Message> findFirstByRecipientsContainingAndAndSender(User recipient, User sender);
 }
